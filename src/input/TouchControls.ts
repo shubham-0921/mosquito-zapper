@@ -92,8 +92,6 @@ export class TouchControls {
 
   // ── Event wiring ─────────────────────────────────────────────────
   private attachEvents() {
-    const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement
-
     // Swing button — separate touch handling, doesn't bleed into look
     this.swingBtn.addEventListener('touchstart', (e) => {
       e.preventDefault()
@@ -108,8 +106,9 @@ export class TouchControls {
       this.swingBtn.style.transform  = 'scale(1)'
     })
 
-    // Canvas handles joystick + look
-    canvas.addEventListener('touchstart', (e) => {
+    // Container covers the full screen and sits above the canvas, so
+    // joystick + look events must be listened here (not on the canvas).
+    this.container.addEventListener('touchstart', (e) => {
       e.preventDefault()
       for (const t of Array.from(e.changedTouches)) {
         const onLeft = t.clientX < window.innerWidth * LEFT_ZONE
@@ -128,7 +127,7 @@ export class TouchControls {
       }
     }, { passive: false })
 
-    canvas.addEventListener('touchmove', (e) => {
+    this.container.addEventListener('touchmove', (e) => {
       e.preventDefault()
       for (const t of Array.from(e.changedTouches)) {
         if (t.identifier === this.joyId)  this.updateJoy(t.clientX, t.clientY)
@@ -147,8 +146,8 @@ export class TouchControls {
       }
     }
 
-    canvas.addEventListener('touchend',    endTouch, { passive: false })
-    canvas.addEventListener('touchcancel', endTouch, { passive: false })
+    this.container.addEventListener('touchend',    endTouch, { passive: false })
+    this.container.addEventListener('touchcancel', endTouch, { passive: false })
   }
 
   // ── Joystick ─────────────────────────────────────────────────────
