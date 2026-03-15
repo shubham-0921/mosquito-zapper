@@ -8,7 +8,7 @@ export class MosquitoPool {
   private pool: MosquitoAI[] = []
   private active: Set<MosquitoAI> = new Set()
 
-  constructor(private scene: Scene, detailed = true) {
+  constructor(scene: Scene, detailed = true) {
     for (let i = 0; i < POOL_SIZE; i++) {
       this.pool.push(new MosquitoAI(scene, i, detailed))
     }

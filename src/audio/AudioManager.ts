@@ -119,7 +119,7 @@ export class AudioManager {
     osc.stop(ctx.currentTime + 0.1)
   }
 
-  private makeDistortionCurve(amount: number): Float32Array {
+  private makeDistortionCurve(amount: number): Float32Array<ArrayBuffer> {
     const samples = 256
     const curve = new Float32Array(samples)
     const deg = Math.PI / 180

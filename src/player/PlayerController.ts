@@ -296,7 +296,7 @@ export class PlayerController {
     this.isEnabled = false
     this.camera.detachControl()
     this.racketMeshes.forEach(m => (m.isVisible = false))
-    this.scene.onPointerDown = null
+    this.scene.onPointerDown = undefined
   }
 
   triggerSwing() {

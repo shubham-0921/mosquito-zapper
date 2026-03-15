@@ -6,7 +6,6 @@ import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem'
 import { Texture } from '@babylonjs/core/Materials/Textures/texture'
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
-import { Mesh } from '@babylonjs/core/Meshes/mesh'
 
 export class VFXManager {
   private comboOverlay: HTMLDivElement

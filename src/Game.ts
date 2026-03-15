@@ -39,8 +39,8 @@ export class Game {
 
   constructor(
     engine: Engine,
-    private canvas: HTMLCanvasElement,
-    private uiRoot: HTMLDivElement,
+    canvas: HTMLCanvasElement,
+    uiRoot: HTMLDivElement,
   ) {
     this.sceneSetup = new SceneSetup(engine, canvas)
     const scene      = this.sceneSetup.getScene()

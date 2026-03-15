@@ -149,7 +149,6 @@ export class HUD {
 
     // Vignette intensifies as HP drops below 40%
     const vigOpacity = pct < 0.4 ? (0.4 - pct) / 0.4 : 0   // 0 → 1
-    const vigAlpha = Math.round(vigOpacity * 180)
     this.vignette.style.background =
       `radial-gradient(ellipse at center, transparent 40%, rgba(180,0,0,${vigOpacity.toFixed(2)}) 100%)`
   }
