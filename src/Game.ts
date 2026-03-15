@@ -75,7 +75,22 @@ export class Game {
     })
   }
 
+  private requestFullscreen() {
+    const el = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void>
+    }
+    const req = el.requestFullscreen ?? el.webkitRequestFullscreen
+    if (req) req.call(el).catch(() => { /* user denied or not supported */ })
+
+    // Lock to landscape on supported browsers
+    try {
+      const ori = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }
+      ori.lock?.('landscape').catch(() => { /* ignore */ })
+    } catch (_) { /* ignore */ }
+  }
+
   private startGame() {
+    this.requestFullscreen()
     this.state     = 'playing'
     this.gameTimer = this.GAME_DURATION
     this.scoreManager.reset()
