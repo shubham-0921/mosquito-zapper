@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Prevent browser zoom on double-tap / pinch -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Mosquito Zapper</title>
+
+    <!-- PWA / homescreen -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#FF6F00" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen" />
+    <meta name="apple-mobile-web-app-title" content="MosqZapper" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        background: #000;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        /* Prevent iOS rubber-band scroll */
+        position: fixed;
+        overscroll-behavior: none;
+      }
+
+      #renderCanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+        outline: none;
+      }
+
+      #ui-root {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        color: white;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #ui-root * { pointer-events: auto; }
+
+      /* Portrait-mode blocker — show when phone is vertical */
+      #portrait-warning {
+        display: none;
+        position: fixed; inset: 0;
+        background: #050101;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        z-index: 9999;
+        color: white;
+        text-align: center;
+        padding: 24px;
+      }
+      #portrait-warning .icon { font-size: 4rem; animation: rotate90 1.5s ease-in-out infinite alternate; }
+      #portrait-warning p     { font-size: 1.2rem; color: #FFCC80; }
+      @keyframes rotate90 {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(90deg); }
+      }
+
+      /* On portrait screens: hide game, show warning */
+      @media (orientation: portrait) and (max-width: 900px) {
+        #renderCanvas, #ui-root { display: none; }
+        #portrait-warning       { display: flex; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Portrait rotation prompt -->
+    <div id="portrait-warning">
+      <div class="icon">📱</div>
+      <p>Rotate your phone to landscape<br>to play Mosquito Zapper</p>
+    </div>
+
+    <canvas id="renderCanvas"></canvas>
+    <div id="ui-root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

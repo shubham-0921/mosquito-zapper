@@ -1,0 +1,10 @@
+{
+  "name": "Mosquito Zapper",
+  "short_name": "MosqZapper",
+  "description": "Hunt mosquitoes. 25 seconds. Survive.",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050101",
+  "theme_color": "#FF6F00"
+}
