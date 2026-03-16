@@ -373,6 +373,18 @@ export class PlayerController {
     if (this.isEnabled) this.flamethrower.setVisible(true)
   }
 
+  startFlame() {
+    if (!this.flamethrower) return
+    this.flamethrower.startFlame()
+    this.flameStartCallbacks.forEach(cb => cb())
+  }
+
+  stopFlame() {
+    if (!this.flamethrower) return
+    this.flamethrower.stopFlame()
+    this.flameStopCallbacks.forEach(cb => cb())
+  }
+
   isFlaming(): boolean { return this.flamethrower?.isFlaming ?? false }
 
   /** World-space position of the racket head (used by hit detection) */

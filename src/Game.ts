@@ -201,6 +201,7 @@ export class Game {
           this.flamethrowerUnlocked = true
           this.player.unlockFlamethrower()
           this.hud.showWeaponUnlock('🔥 FLAMETHROWER UNLOCKED! HOLD F')
+          this.touchControls?.showFlameBtn()
         }
         this.audioManager.update(mosquitoes, playerPos)
       }

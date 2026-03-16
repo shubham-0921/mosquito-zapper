@@ -1,14 +1,15 @@
 import { PlayerController } from '../player/PlayerController'
 
-const JOYSTICK_MAX   = 42    // max knob travel in px
-const LOOK_SENS      = 0.0038 // rad per pixel
-const LEFT_ZONE      = 0.42  // left 42% of screen = joystick
+const JOYSTICK_MAX   = 50     // max knob travel in px
+const LOOK_SENS      = 0.0045 // rad per pixel — slightly snappier than before
+const LEFT_ZONE      = 0.42   // left 42% of screen = joystick
 
 export class TouchControls {
   private container:  HTMLDivElement
   private joyBase:    HTMLDivElement
   private joyKnob:    HTMLDivElement
   private swingBtn:   HTMLDivElement
+  private flameBtn:   HTMLDivElement
 
   private joyId:   number | null = null
   private lookId:  number | null = null
@@ -30,10 +31,12 @@ export class TouchControls {
     this.joyBase  = this.makeJoyBase()
     this.joyKnob  = this.makeJoyKnob()
     this.swingBtn = this.makeSwingBtn()
+    this.flameBtn = this.makeFlameBtn()
 
     this.joyBase.appendChild(this.joyKnob)
     this.container.appendChild(this.joyBase)
     this.container.appendChild(this.swingBtn)
+    this.container.appendChild(this.flameBtn)
 
     this.attachEvents()
   }
@@ -43,11 +46,11 @@ export class TouchControls {
     const el = document.createElement('div')
     el.style.cssText = `
       position: absolute;
-      bottom: 28px; left: 28px;
-      width: 108px; height: 108px;
+      bottom: 32px; left: 32px;
+      width: 124px; height: 124px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.06);
-      border: 2px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.07);
+      border: 2px solid rgba(255,255,255,0.22);
       pointer-events: none;
     `
     return el
@@ -58,13 +61,14 @@ export class TouchControls {
     el.style.cssText = `
       position: absolute;
       top: 50%; left: 50%;
-      width: 42px; height: 42px;
+      width: 52px; height: 52px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.32);
-      border: 2px solid rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.35);
+      border: 2px solid rgba(255,255,255,0.60);
       transform: translate(-50%, -50%);
       pointer-events: none;
       transition: background 0.1s;
+      box-shadow: 0 0 12px rgba(255,255,255,0.15);
     `
     return el
   }
@@ -73,41 +77,85 @@ export class TouchControls {
     const el = document.createElement('div')
     el.style.cssText = `
       position: absolute;
-      bottom: 28px; right: 28px;
-      width: 88px; height: 88px;
+      bottom: 32px; right: 32px;
+      width: 96px; height: 96px;
       border-radius: 50%;
-      background: rgba(255,130,0,0.32);
+      background: rgba(255,130,0,0.30);
       border: 2.5px solid rgba(255,200,0,0.65);
       display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
       font-size: 2.2rem;
       pointer-events: auto;
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
       transition: background 0.08s, transform 0.08s;
+      box-shadow: 0 0 16px rgba(255,160,0,0.25);
     `
-    el.textContent = '⚡'
+    el.innerHTML = `<span style="font-size:2rem">⚡</span><span style="font-size:0.55rem;font-family:monospace;letter-spacing:0.05em;color:rgba(255,220,100,0.85);margin-top:2px">ZAP</span>`
+    return el
+  }
+
+  private makeFlameBtn(): HTMLDivElement {
+    const el = document.createElement('div')
+    el.style.cssText = `
+      position: absolute;
+      bottom: 148px; right: 32px;
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: rgba(220,60,0,0.30);
+      border: 2.5px solid rgba(255,120,0,0.65);
+      display: none;
+      align-items: center; justify-content: center;
+      flex-direction: column;
+      font-size: 2rem;
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      transition: background 0.08s, transform 0.08s;
+      box-shadow: 0 0 18px rgba(255,80,0,0.30);
+    `
+    el.innerHTML = `<span style="font-size:1.8rem">🔥</span><span style="font-size:0.5rem;font-family:monospace;letter-spacing:0.05em;color:rgba(255,180,80,0.85);margin-top:2px">HOLD</span>`
     return el
   }
 
   // ── Event wiring ─────────────────────────────────────────────────
   private attachEvents() {
-    // Swing button — separate touch handling, doesn't bleed into look
+    // Swing button
     this.swingBtn.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
       this.player.triggerSwing()
       this.swingBtn.style.background = 'rgba(255,210,0,0.55)'
-      this.swingBtn.style.transform  = 'scale(0.92)'
+      this.swingBtn.style.transform  = 'scale(0.90)'
     }, { passive: false })
 
     this.swingBtn.addEventListener('touchend', () => {
-      this.swingBtn.style.background = 'rgba(255,130,0,0.32)'
+      this.swingBtn.style.background = 'rgba(255,130,0,0.30)'
       this.swingBtn.style.transform  = 'scale(1)'
     })
 
-    // Container covers the full screen and sits above the canvas, so
-    // joystick + look events must be listened here (not on the canvas).
+    // Flame button — hold to fire, release to stop
+    this.flameBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      this.player.startFlame()
+      this.flameBtn.style.background = 'rgba(255,100,0,0.60)'
+      this.flameBtn.style.transform  = 'scale(0.93)'
+      this.flameBtn.style.boxShadow  = '0 0 30px rgba(255,100,0,0.70)'
+    }, { passive: false })
+
+    const stopFlame = () => {
+      this.player.stopFlame()
+      this.flameBtn.style.background = 'rgba(220,60,0,0.30)'
+      this.flameBtn.style.transform  = 'scale(1)'
+      this.flameBtn.style.boxShadow  = '0 0 18px rgba(255,80,0,0.30)'
+    }
+    this.flameBtn.addEventListener('touchend',    stopFlame)
+    this.flameBtn.addEventListener('touchcancel', stopFlame)
+
+    // Full-screen handler for joystick + look
     this.container.addEventListener('touchstart', (e) => {
       e.preventDefault()
       for (const t of Array.from(e.changedTouches)) {
@@ -116,10 +164,10 @@ export class TouchControls {
         if (onLeft && this.joyId === null) {
           this.joyId     = t.identifier
           this.joyOrigin = { x: t.clientX, y: t.clientY }
-          // Float the joystick base to wherever the thumb lands
-          this.joyBase.style.left   = `${t.clientX - 54}px`
+          // Float joystick base to wherever the thumb lands
+          this.joyBase.style.left   = `${t.clientX - 62}px`
           this.joyBase.style.bottom = ''
-          this.joyBase.style.top    = `${t.clientY - 54}px`
+          this.joyBase.style.top    = `${t.clientY - 62}px`
         } else if (!onLeft && this.lookId === null) {
           this.lookId      = t.identifier
           this.lastLookPos = { x: t.clientX, y: t.clientY }
@@ -138,8 +186,8 @@ export class TouchControls {
     const endTouch = (e: TouchEvent) => {
       for (const t of Array.from(e.changedTouches)) {
         if (t.identifier === this.joyId) {
-          this.joyId     = null
-          this.moveVec   = { x: 0, z: 0 }
+          this.joyId   = null
+          this.moveVec = { x: 0, z: 0 }
           this.resetKnob()
         }
         if (t.identifier === this.lookId) this.lookId = null
@@ -165,10 +213,9 @@ export class TouchControls {
 
   private resetKnob() {
     this.joyKnob.style.transform = 'translate(-50%, -50%)'
-    // Snap base back to default bottom-left position
     this.joyBase.style.top    = ''
-    this.joyBase.style.bottom = '28px'
-    this.joyBase.style.left   = '28px'
+    this.joyBase.style.bottom = '32px'
+    this.joyBase.style.left   = '32px'
   }
 
   // ── Look ─────────────────────────────────────────────────────────
@@ -186,14 +233,25 @@ export class TouchControls {
     }
   }
 
+  // ── Lifecycle ─────────────────────────────────────────────────────
   show() {
-    this.container.style.display         = 'block'
-    this.container.style.pointerEvents   = 'auto'
+    this.container.style.display       = 'block'
+    this.container.style.pointerEvents = 'auto'
   }
 
   hide() {
     this.container.style.display = 'none'
     this.moveVec = { x: 0, z: 0 }
     this.resetKnob()
+    // Stop flame if active when game ends
+    this.player.stopFlame()
+  }
+
+  /** Call this when flamethrower is unlocked mid-game */
+  showFlameBtn() {
+    this.flameBtn.style.display = 'flex'
+    // Brief pulse animation to draw attention
+    this.flameBtn.style.transform = 'scale(1.25)'
+    setTimeout(() => { this.flameBtn.style.transform = 'scale(1)' }, 300)
   }
 }
