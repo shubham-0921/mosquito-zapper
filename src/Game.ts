@@ -151,7 +151,6 @@ export class Game {
     if (this.state !== 'playing') return
     this.state = 'results'
 
-    this.sceneSetup.getLampManager().stop()
     this.spawnManager.stop()
     this.mosquitoPool.releaseAll()
     this.healthPickup.stop()
