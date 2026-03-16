@@ -98,6 +98,9 @@ export class Game {
       this.mosquitoPool.updateAllLightPos(pos)
       if (this.touchControls) this.player.smoothLookAt(pos)  // auto-orient on mobile
     })
+
+    // Light the room from the start (title screen)
+    lampMgr.illuminate()
     this.health.onDamage(() => this.hud.flashDamage())
     this.health.onDeath (() => this.endGame())
     this.healthPickup.onCollect(amount => {
@@ -160,6 +163,9 @@ export class Game {
     if (this.pointerHint) this.pointerHint.style.display = 'none'
     this.player.disable()
     this.audioManager.stopAmbience()
+
+    // Re-light the room for the results screen
+    this.sceneSetup.getLampManager().illuminate()
 
     const { score, kills, bestCombo } = this.scoreManager.getStats()
     this.resultsScreen.show(this.playerName, score, kills, bestCombo)

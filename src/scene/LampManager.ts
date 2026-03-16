@@ -45,6 +45,16 @@ export class LampManager {
     }
   }
 
+  // Turn all lamps on at softer intensity — used for title / results screens
+  illuminate() {
+    this.lamps.forEach((lamp) => {
+      lamp.light.setEnabled(true)
+      lamp.light.intensity = 0.8
+      lamp.bulbMat.emissiveColor  = new Color3(1.0, 0.9, 0.5)
+      lamp.shadeMat.emissiveColor = new Color3(0.35, 0.24, 0.04)
+    })
+  }
+
   // Also call on stop so all lamps go dark
   stop() {
     this.lamps.forEach((_, i) => this.deactivateLamp(i))
