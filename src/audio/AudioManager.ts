@@ -40,6 +40,10 @@ export class AudioManager {
   private nextNoteTime  = 0
   private stepIndex     = 0
 
+  // Flame audio nodes
+  private flameGain: GainNode | null = null
+  private flameSource: AudioBufferSourceNode | null = null
+
   private getCtx(): AudioContext {
     if (!this.ctx) {
       this.ctx = new AudioContext()
@@ -149,6 +153,57 @@ export class AudioManager {
   // Just a very soft volume swell when many mosquitoes are near — no oscillators
   update(_mosquitoes: MosquitoAI[], _playerPos: Vector3) {
     // Proximity feedback handled by the zap sound; no buzz needed
+  }
+
+  // ── Flame roar ────────────────────────────────────────────────────
+  startFlameSound() {
+    const ctx = this.getCtx()
+    if (this.flameGain) return   // already playing
+
+    // White noise buffer looped continuously
+    const bufLen = ctx.sampleRate * 1.5
+    const buf    = ctx.createBuffer(1, bufLen, ctx.sampleRate)
+    const data   = buf.getChannelData(0)
+    for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1
+
+    const src = ctx.createBufferSource()
+    src.buffer = buf
+    src.loop   = true
+
+    // Low-pass shapes noise into a deep roar
+    const lpf = ctx.createBiquadFilter()
+    lpf.type            = 'lowpass'
+    lpf.frequency.value = 320
+    lpf.Q.value         = 1.2
+
+    // Band-pass adds a mid-frequency "whoosh" crackle
+    const bpf = ctx.createBiquadFilter()
+    bpf.type            = 'bandpass'
+    bpf.frequency.value = 800
+    bpf.Q.value         = 0.8
+
+    const gain = ctx.createGain()
+    gain.gain.setValueAtTime(0, ctx.currentTime)
+    gain.gain.linearRampToValueAtTime(0.38, ctx.currentTime + 0.12)
+
+    src.connect(lpf)
+    lpf.connect(bpf)
+    bpf.connect(gain)
+    gain.connect(this.masterGain)
+    src.start()
+
+    this.flameSource = src
+    this.flameGain   = gain
+  }
+
+  stopFlameSound() {
+    if (!this.flameGain || !this.ctx) return
+    const ctx = this.ctx
+    this.flameGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.10)
+    const src = this.flameSource
+    setTimeout(() => { src?.stop(); src?.disconnect() }, 150)
+    this.flameGain   = null
+    this.flameSource = null
   }
 
   // ── Zap SFX ───────────────────────────────────────────────────────

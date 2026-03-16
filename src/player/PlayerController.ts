@@ -7,6 +7,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
 import { Mesh } from '@babylonjs/core/Meshes/mesh'
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
 import { PointLight } from '@babylonjs/core/Lights/pointLight'
+import { Flamethrower } from './Flamethrower'
 
 // ── Glow colours ────────────────────────────────────────────────────
 const GRID_IDLE   = new Color3(0.03, 0.08, 0.22)
@@ -23,7 +24,22 @@ export class PlayerController {
   private camera: UniversalCamera
   private racketRoot: TransformNode
   private swingCallbacks: Array<() => void> = []
+  private flameStartCallbacks: Array<() => void> = []
+  private flameStopCallbacks:  Array<() => void> = []
   private isEnabled = false
+
+  private flamethrower: Flamethrower | null = null
+
+  private _onFKeyDown = (e: KeyboardEvent) => {
+    if (e.code !== 'KeyF' || e.repeat || !this.flamethrower) return
+    this.flamethrower.startFlame()
+    this.flameStartCallbacks.forEach(cb => cb())
+  }
+  private _onFKeyUp = (e: KeyboardEvent) => {
+    if (e.code !== 'KeyF' || !this.flamethrower) return
+    this.flamethrower.stopFlame()
+    this.flameStopCallbacks.forEach(cb => cb())
+  }
 
   private _onCanvasClick = () => {
     if (document.pointerLockElement !== this.canvas) {
@@ -42,6 +58,9 @@ export class PlayerController {
   private glowLight!: PointLight
 
   constructor(private scene: Scene, private canvas: HTMLCanvasElement) {
+    // Must be focusable for keyboard events to fire on the canvas element
+    canvas.tabIndex = 0
+
     this.camera = new UniversalCamera('playerCam', new Vector3(0, 1.7, 0), scene)
     this.camera.setTarget(new Vector3(0, 1.7, -1))
     this.camera.minZ             = 0.1
@@ -289,14 +308,29 @@ export class PlayerController {
   }
 
   // ── Public API ────────────────────────────────────────────────────
+  private sensitivityToAngular(val: number): number {
+    // Slider 1 (slowest) → angularSensibility 2500, 10 (fastest) → 200
+    // Babylon.js: lower angularSensibility = faster rotation
+    return Math.round(2500 - (val - 1) * (2300 / 9))
+  }
+
   enable() {
+    const sens = parseInt(localStorage.getItem('mz_sensitivity') ?? '3', 10)
+    this.camera.angularSensibility = this.sensitivityToAngular(sens)
     this.isEnabled = true
     this.camera.attachControl(this.canvas, true)
     this.racketMeshes.forEach(m => (m.isVisible = true))
 
+    // Give the canvas keyboard focus so WASD fires immediately
+    this.canvas.focus()
+
     // Request pointer lock so mouse movement steers the camera without holding a button
     this.canvas.requestPointerLock()
     this.canvas.addEventListener('click', this._onCanvasClick)
+    window.addEventListener('keydown', this._onFKeyDown)
+    window.addEventListener('keyup',   this._onFKeyUp)
+
+    if (this.flamethrower) this.flamethrower.setVisible(true)
 
     this.scene.onPointerDown = (evt) => {
       if (evt.button === 0) {
@@ -316,7 +350,10 @@ export class PlayerController {
     this.racketMeshes.forEach(m => (m.isVisible = false))
     this.scene.onPointerDown = undefined
     this.canvas.removeEventListener('click', this._onCanvasClick)
+    window.removeEventListener('keydown', this._onFKeyDown)
+    window.removeEventListener('keyup',   this._onFKeyUp)
     if (document.pointerLockElement === this.canvas) document.exitPointerLock()
+    if (this.flamethrower) this.flamethrower.setVisible(false)
   }
 
   triggerSwing() {
@@ -326,7 +363,17 @@ export class PlayerController {
     this.swingCallbacks.forEach(cb => cb())
   }
 
-  onSwing(cb: () => void)    { this.swingCallbacks.push(cb) }
+  onSwing(cb: () => void)      { this.swingCallbacks.push(cb) }
+  onFlameStart(cb: () => void) { this.flameStartCallbacks.push(cb) }
+  onFlameStop(cb: () => void)  { this.flameStopCallbacks.push(cb) }
+
+  unlockFlamethrower() {
+    if (this.flamethrower) return
+    this.flamethrower = new Flamethrower(this.scene, this.camera)
+    if (this.isEnabled) this.flamethrower.setVisible(true)
+  }
+
+  isFlaming(): boolean { return this.flamethrower?.isFlaming ?? false }
 
   /** World-space position of the racket head (used by hit detection) */
   getRacketPosition(): Vector3 {

@@ -169,6 +169,39 @@ export class HUD {
     }, 120)
   }
 
+  showWeaponUnlock(text: string) {
+    const banner = document.createElement('div')
+    banner.style.cssText = `
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.7);
+      background: linear-gradient(135deg, rgba(230,60,0,0.92), rgba(255,140,0,0.92));
+      color: #fff;
+      font-family: 'Press Start 2P', monospace, sans-serif;
+      font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+      padding: 20px 36px;
+      border-radius: 6px;
+      text-align: center;
+      letter-spacing: 2px;
+      pointer-events: none;
+      z-index: 60;
+      box-shadow: 0 0 40px rgba(255,100,0,0.7);
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    `
+    banner.textContent = text
+    document.body.appendChild(banner)
+    requestAnimationFrame(() => {
+      banner.style.opacity   = '1'
+      banner.style.transform = 'translate(-50%, -50%) scale(1)'
+    })
+    setTimeout(() => {
+      banner.style.opacity   = '0'
+      banner.style.transform = 'translate(-50%, -50%) scale(0.8)'
+      setTimeout(() => banner.remove(), 300)
+    }, 2500)
+  }
+
   show() {
     this.el.style.display      = 'block'
     this.vignette.style.display = 'block'

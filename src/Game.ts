@@ -14,6 +14,7 @@ import { TitleScreen } from './ui/TitleScreen'
 import { ResultsScreen } from './ui/ResultsScreen'
 import { isMobile } from './input/DeviceDetect'
 import { TouchControls } from './input/TouchControls'
+import { LeaderboardService } from './services/LeaderboardService'
 
 type GameState = 'title' | 'playing' | 'results'
 
@@ -36,7 +37,11 @@ export class Game {
 
   private gameTimer = 0
   private readonly GAME_DURATION = 25
+  private readonly FLAMETHROWER_KILL_THRESHOLD = 5
   private pointerHint: HTMLDivElement | null = null
+  private playerName = 'Player'
+  private leaderboard = new LeaderboardService()
+  private flamethrowerUnlocked = false
 
   constructor(
     engine: Engine,
@@ -60,8 +65,8 @@ export class Game {
       this.player, this.mosquitoPool, this.scoreManager, this.audioManager, this.vfxManager,
     )
     this.hud           = new HUD(uiRoot)
-    this.titleScreen   = new TitleScreen(uiRoot, () => this.startGame())
-    this.resultsScreen = new ResultsScreen(uiRoot, () => this.restartGame())
+    this.titleScreen   = new TitleScreen(uiRoot, (name) => this.startGame(name), this.leaderboard)
+    this.resultsScreen = new ResultsScreen(uiRoot, () => this.restartGame(), this.leaderboard)
 
     if (mobile) {
       this.touchControls = new TouchControls(this.player)
@@ -96,6 +101,9 @@ export class Game {
       this.health.heal(amount)
       this.hud.flashHeal()
     })
+
+    this.player.onFlameStart(() => this.audioManager.startFlameSound())
+    this.player.onFlameStop(()  => this.audioManager.stopFlameSound())
   }
 
   private requestFullscreen() {
@@ -112,13 +120,15 @@ export class Game {
     } catch (_) { /* ignore */ }
   }
 
-  private startGame() {
+  private startGame(name: string) {
+    this.playerName = name
     this.requestFullscreen()
     this.state     = 'playing'
     this.gameTimer = this.GAME_DURATION
     this.scoreManager.reset()
     this.health.reset()
 
+    this.flamethrowerUnlocked = false
     this.sceneSetup.getLampManager().start()
     this.spawnManager.start()
     this.healthPickup.start()
@@ -150,7 +160,7 @@ export class Game {
     this.audioManager.stopAmbience()
 
     const { score, kills, bestCombo } = this.scoreManager.getStats()
-    this.resultsScreen.show(score, kills, bestCombo)
+    this.resultsScreen.show(this.playerName, score, kills, bestCombo)
 
     const stored = parseInt(localStorage.getItem('mz_highscore') ?? '0', 10)
     if (score > stored) localStorage.setItem('mz_highscore', String(score))
@@ -186,6 +196,12 @@ export class Game {
 
         const { score, kills, combo } = this.scoreManager.getStats()
         this.hud.update(score, kills, combo, this.gameTimer, this.health.getHP(), this.health.getMaxHP())
+
+        if (!this.flamethrowerUnlocked && kills >= this.FLAMETHROWER_KILL_THRESHOLD) {
+          this.flamethrowerUnlocked = true
+          this.player.unlockFlamethrower()
+          this.hud.showWeaponUnlock('🔥 FLAMETHROWER UNLOCKED! HOLD F')
+        }
         this.audioManager.update(mosquitoes, playerPos)
       }
     }
