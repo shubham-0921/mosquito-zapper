@@ -9,7 +9,8 @@ export class TouchControls {
   private joyBase:    HTMLDivElement
   private joyKnob:    HTMLDivElement
   private swingBtn:   HTMLDivElement
-  private flameBtn:   HTMLDivElement
+  private flameBtn:    HTMLDivElement
+  private flameActive  = false
 
   private joyId:   number | null = null
   private lookId:  number | null = null
@@ -100,7 +101,7 @@ export class TouchControls {
     const el = document.createElement('div')
     el.style.cssText = `
       position: absolute;
-      bottom: 148px; right: 32px;
+      bottom: 172px; left: 32px;
       width: 88px; height: 88px;
       border-radius: 50%;
       background: rgba(220,60,0,0.30);
@@ -113,10 +114,10 @@ export class TouchControls {
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
-      transition: background 0.08s, transform 0.08s;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
       box-shadow: 0 0 18px rgba(255,80,0,0.30);
     `
-    el.innerHTML = `<span style="font-size:1.8rem">🔥</span><span style="font-size:0.5rem;font-family:monospace;letter-spacing:0.05em;color:rgba(255,180,80,0.85);margin-top:2px">HOLD</span>`
+    el.innerHTML = `<span style="font-size:1.8rem">🔥</span><span style="font-size:0.5rem;font-family:monospace;letter-spacing:0.05em;color:rgba(255,180,80,0.85);margin-top:2px">TAP</span>`
     return el
   }
 
@@ -136,24 +137,25 @@ export class TouchControls {
       this.swingBtn.style.transform  = 'scale(1)'
     })
 
-    // Flame button — hold to fire, release to stop
+    // Flame button — tap to toggle on/off (left thumb, no need to hold)
     this.flameBtn.addEventListener('touchstart', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      this.player.startFlame()
-      this.flameBtn.style.background = 'rgba(255,100,0,0.60)'
-      this.flameBtn.style.transform  = 'scale(0.93)'
-      this.flameBtn.style.boxShadow  = '0 0 30px rgba(255,100,0,0.70)'
+      this.flameActive = !this.flameActive
+      if (this.flameActive) {
+        this.player.startFlame()
+        this.flameBtn.style.background = 'rgba(255,100,0,0.65)'
+        this.flameBtn.style.boxShadow  = '0 0 32px rgba(255,100,0,0.75)'
+        this.flameBtn.style.transform  = 'scale(1.08)'
+        this.flameBtn.querySelector('span:last-child')!.textContent = 'ON'
+      } else {
+        this.player.stopFlame()
+        this.flameBtn.style.background = 'rgba(220,60,0,0.30)'
+        this.flameBtn.style.boxShadow  = '0 0 18px rgba(255,80,0,0.30)'
+        this.flameBtn.style.transform  = 'scale(1)'
+        this.flameBtn.querySelector('span:last-child')!.textContent = 'TAP'
+      }
     }, { passive: false })
-
-    const stopFlame = () => {
-      this.player.stopFlame()
-      this.flameBtn.style.background = 'rgba(220,60,0,0.30)'
-      this.flameBtn.style.transform  = 'scale(1)'
-      this.flameBtn.style.boxShadow  = '0 0 18px rgba(255,80,0,0.30)'
-    }
-    this.flameBtn.addEventListener('touchend',    stopFlame)
-    this.flameBtn.addEventListener('touchcancel', stopFlame)
 
     // Full-screen handler for joystick + look
     this.container.addEventListener('touchstart', (e) => {
@@ -243,15 +245,21 @@ export class TouchControls {
     this.container.style.display = 'none'
     this.moveVec = { x: 0, z: 0 }
     this.resetKnob()
-    // Stop flame if active when game ends
-    this.player.stopFlame()
+    if (this.flameActive) {
+      this.flameActive = false
+      this.player.stopFlame()
+    }
   }
 
   /** Call this when flamethrower is unlocked mid-game */
   showFlameBtn() {
-    this.flameBtn.style.display = 'flex'
-    // Brief pulse animation to draw attention
-    this.flameBtn.style.transform = 'scale(1.25)'
-    setTimeout(() => { this.flameBtn.style.transform = 'scale(1)' }, 300)
+    this.flameActive = false
+    this.flameBtn.style.display    = 'flex'
+    this.flameBtn.style.background = 'rgba(220,60,0,0.30)'
+    this.flameBtn.style.boxShadow  = '0 0 18px rgba(255,80,0,0.30)'
+    this.flameBtn.querySelector('span:last-child')!.textContent = 'TAP'
+    // Pulse to draw attention
+    this.flameBtn.style.transform = 'scale(1.28)'
+    setTimeout(() => { this.flameBtn.style.transform = 'scale(1)' }, 320)
   }
 }
