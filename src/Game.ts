@@ -94,7 +94,10 @@ export class Game {
       })
     }
 
-    lampMgr.onSwitch(pos => this.mosquitoPool.updateAllLightPos(pos))
+    lampMgr.onSwitch(pos => {
+      this.mosquitoPool.updateAllLightPos(pos)
+      if (this.touchControls) this.player.smoothLookAt(pos)  // auto-orient on mobile
+    })
     this.health.onDamage(() => this.hud.flashDamage())
     this.health.onDeath (() => this.endGame())
     this.healthPickup.onCollect(amount => {

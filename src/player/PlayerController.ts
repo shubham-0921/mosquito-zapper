@@ -51,6 +51,10 @@ export class PlayerController {
   private isSwinging  = false
   private racketMeshes: Mesh[] = []
 
+  // Auto-rotate toward lamp on mobile
+  private autoLookYaw:   number | null = null
+  private autoLookPitch: number | null = null
+
   // Glow
   private gridMat!:  StandardMaterial
   private frameMat!: StandardMaterial
@@ -276,6 +280,24 @@ export class PlayerController {
       this.glowLight.intensity    = 1.5 * t
     }
 
+    // Smooth auto-rotate toward lamp (mobile only)
+    if (this.autoLookYaw !== null && this.autoLookPitch !== null) {
+      let dyaw = this.autoLookYaw - this.camera.rotation.y
+      while (dyaw >  Math.PI) dyaw -= Math.PI * 2
+      while (dyaw < -Math.PI) dyaw += Math.PI * 2
+      const dpitch = this.autoLookPitch - this.camera.rotation.x
+      const step = 2.8 * dt
+      if (Math.abs(dyaw) < 0.015 && Math.abs(dpitch) < 0.015) {
+        this.camera.rotation.y = this.autoLookYaw
+        this.camera.rotation.x = this.autoLookPitch
+        this.autoLookYaw   = null
+        this.autoLookPitch = null
+      } else {
+        this.camera.rotation.y += Math.sign(dyaw)   * Math.min(Math.abs(dyaw),   step)
+        this.camera.rotation.x += Math.sign(dpitch) * Math.min(Math.abs(dpitch), step)
+      }
+    }
+
     // Room bounds
     const pos = this.camera.position
     pos.x = Math.max(-4.5, Math.min(4.5, pos.x))
@@ -297,8 +319,18 @@ export class PlayerController {
 
   /** Rotate camera from touch drag delta (already in radians) */
   applyLookDelta(dx: number, dy: number) {
+    // Player manually swiping cancels any auto-rotate
+    this.autoLookYaw   = null
+    this.autoLookPitch = null
     this.camera.rotation.y += dx
     this.camera.rotation.x = Math.max(-1.1, Math.min(1.1, this.camera.rotation.x + dy))
+  }
+
+  /** Smoothly pan the camera to face a world position (mobile auto-orient) */
+  smoothLookAt(worldPos: Vector3) {
+    const dir = worldPos.subtract(this.camera.position)
+    this.autoLookYaw   = Math.atan2(dir.x, dir.z)
+    this.autoLookPitch = -Math.atan2(dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z))
   }
 
   /** Enable for mobile — shows racket but skips keyboard/mouse attachment */
