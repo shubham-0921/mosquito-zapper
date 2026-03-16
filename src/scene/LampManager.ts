@@ -28,14 +28,14 @@ export class LampManager {
     const startIdx = Math.floor(Math.random() * this.lamps.length)
     this.activateLamp(startIdx)
     this.switchTimer = 0
-    this.switchInterval = 8 + Math.random() * 7
+    this.switchInterval = 3 + Math.random() * 3
   }
 
   update(dt: number) {
     this.switchTimer += dt
     if (this.switchTimer >= this.switchInterval) {
       this.switchTimer = 0
-      this.switchInterval = 8 + Math.random() * 7
+      this.switchInterval = 3 + Math.random() * 3
       let next = this.activeIndex
       while (next === this.activeIndex) {
         next = Math.floor(Math.random() * this.lamps.length)

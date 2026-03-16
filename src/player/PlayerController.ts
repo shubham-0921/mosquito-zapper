@@ -25,6 +25,12 @@ export class PlayerController {
   private swingCallbacks: Array<() => void> = []
   private isEnabled = false
 
+  private _onCanvasClick = () => {
+    if (document.pointerLockElement !== this.canvas) {
+      this.canvas.requestPointerLock()
+    }
+  }
+
   private swingAnimT  = 0
   private isSwinging  = false
   private racketMeshes: Mesh[] = []
@@ -287,8 +293,20 @@ export class PlayerController {
     this.isEnabled = true
     this.camera.attachControl(this.canvas, true)
     this.racketMeshes.forEach(m => (m.isVisible = true))
+
+    // Request pointer lock so mouse movement steers the camera without holding a button
+    this.canvas.requestPointerLock()
+    this.canvas.addEventListener('click', this._onCanvasClick)
+
     this.scene.onPointerDown = (evt) => {
-      if (evt.button === 0) this.triggerSwing()
+      if (evt.button === 0) {
+        if (document.pointerLockElement !== this.canvas) {
+          // Not locked yet — first click just acquires the lock
+          this.canvas.requestPointerLock()
+        } else {
+          this.triggerSwing()
+        }
+      }
     }
   }
 
@@ -297,6 +315,8 @@ export class PlayerController {
     this.camera.detachControl()
     this.racketMeshes.forEach(m => (m.isVisible = false))
     this.scene.onPointerDown = undefined
+    this.canvas.removeEventListener('click', this._onCanvasClick)
+    if (document.pointerLockElement === this.canvas) document.exitPointerLock()
   }
 
   triggerSwing() {

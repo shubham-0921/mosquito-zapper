@@ -36,6 +36,7 @@ export class Game {
 
   private gameTimer = 0
   private readonly GAME_DURATION = 25
+  private pointerHint: HTMLDivElement | null = null
 
   constructor(
     engine: Engine,
@@ -64,6 +65,28 @@ export class Game {
 
     if (mobile) {
       this.touchControls = new TouchControls(this.player)
+    } else {
+      this.pointerHint = document.createElement('div')
+      this.pointerHint.style.cssText = `
+        position: fixed; inset: 0;
+        display: none;
+        align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.55);
+        color: #fff;
+        font-family: monospace;
+        font-size: 1.3rem;
+        letter-spacing: 0.05em;
+        z-index: 50;
+        pointer-events: none;
+      `
+      this.pointerHint.textContent = 'Click to resume'
+      document.body.appendChild(this.pointerHint)
+
+      document.addEventListener('pointerlockchange', () => {
+        if (this.state !== 'playing' || !this.pointerHint) return
+        const locked = document.pointerLockElement === document.querySelector('canvas')
+        this.pointerHint.style.display = locked ? 'none' : 'flex'
+      })
     }
 
     lampMgr.onSwitch(pos => this.mosquitoPool.updateAllLightPos(pos))
@@ -122,6 +145,7 @@ export class Game {
     this.hud.hide()
 
     if (this.touchControls) this.touchControls.hide()
+    if (this.pointerHint) this.pointerHint.style.display = 'none'
     this.player.disable()
     this.audioManager.stopAmbience()
 
