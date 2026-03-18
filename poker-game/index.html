@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poker Tutor — Learn Texas Hold'em</title>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header>
+      <h1>♠ POKER TUTOR</h1>
+      <div class="header-btns">
+        <button class="btn btn-secondary" id="btn-rankings">📖 Hand Rankings</button>
+      </div>
+    </header>
+
+    <!-- Table area (left/main) -->
+    <main class="table-area">
+
+      <!-- AI opponents -->
+      <div class="ai-seats" id="ai-seats">
+        <!-- Dynamically populated by UI.ts -->
+      </div>
+
+      <!-- Felt table -->
+      <div class="table">
+        <div class="pot-info">
+          <span class="pot-label">POT</span>
+          <span class="pot-value">$<span id="pot">0</span></span>
+          <span class="phase-badge" id="phase">Waiting…</span>
+        </div>
+        <div class="community-cards" id="community-cards"></div>
+      </div>
+
+      <!-- Human player -->
+      <div class="human-area">
+        <div class="human-info">
+          <span class="human-name">🙂 You</span>
+          <span>•</span>
+          <span>Chips: <span class="human-chips-val">$<span id="human-chips">1000</span></span></span>
+          <span class="human-pos" id="human-position"></span>
+        </div>
+        <div class="human-cards" id="human-cards"></div>
+        <div class="hand-desc-area">
+          <div class="hand-name-text" id="hand-name"></div>
+          <div class="hand-desc-text" id="hand-desc"></div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions hidden" id="actions">
+        <button class="btn btn-fold" id="btn-fold">Fold</button>
+        <button class="btn btn-check" id="btn-check">Check</button>
+        <button class="btn btn-call" id="btn-call">Call $<span id="call-amount">0</span></button>
+        <div class="raise-row">
+          <input type="range" id="raise-slider" min="20" max="1000" step="20" value="40" />
+          <button class="btn btn-raise" id="btn-raise">Raise to $<span id="raise-amount">40</span></button>
+        </div>
+      </div>
+
+      <!-- Start / Next hand -->
+      <div class="game-controls" id="game-controls">
+        <button class="btn btn-start" id="btn-start">Deal Hand</button>
+      </div>
+
+    </main>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Hand strength -->
+      <div class="sidebar-section">
+        <h3>Your Win Chance</h3>
+        <div class="meter-bar">
+          <div class="meter-fill" id="strength-fill"></div>
+        </div>
+        <span class="meter-pct" id="strength-pct">—</span>
+      </div>
+
+      <!-- Contextual tip -->
+      <div class="sidebar-section">
+        <h3>💡 Tip</h3>
+        <div class="tip-headline" id="tip-headline">Welcome!</div>
+        <div class="tip-body" id="tip-body">Hit "Deal Hand" to start learning.</div>
+      </div>
+
+      <!-- Action log -->
+      <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;min-height:0;border-bottom:none;">
+        <h3>Action Log</h3>
+        <div class="log-scroll">
+          <div id="log-entries"></div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- Hand Rankings Modal -->
+  <div id="rankings-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>♠ Hand Rankings (best → worst)</h2>
+      <div id="rankings-body"></div>
+      <button class="btn btn-secondary modal-close" id="close-modal">Close</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
